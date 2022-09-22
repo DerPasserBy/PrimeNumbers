@@ -1,6 +1,8 @@
 package cz.vojta.primenumbers.core;
 
+import cz.vojta.primenumbers.exception.UnsupportedFileType;
 import cz.vojta.primenumbers.iface.FileParser;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -17,13 +19,19 @@ public class ExcelFileParser implements FileParser {
 
     private final Workbook workbook;
 
-    public ExcelFileParser(File file) throws IOException {
+    public ExcelFileParser(File file, FileExtension fileExtension) throws IOException, UnsupportedFileType {
         FileInputStream fileStream = new FileInputStream(file);
-        this.workbook = new XSSFWorkbook(fileStream);
+        if (fileExtension == FileExtension.XLS) {
+            this.workbook = new HSSFWorkbook(fileStream);
+        } else if (fileExtension == FileExtension.XLSX) {
+            this.workbook = new XSSFWorkbook(fileStream);
+        } else {
+            throw new UnsupportedFileType();
+        }
     }
 
     /**
-     * Implementation of findAllWholeNumbers() for excel files.
+     * Implementation of findAllWholeNumbers() for excel files. Cache could be added to avoid repeated iteration
      */
     @Override
     public List<Integer> findAllWholeNumbers() {
@@ -36,9 +44,9 @@ public class ExcelFileParser implements FileParser {
                     if (cell.getCellType() == CellType.NUMERIC) {
                         addWholeNumberToList(data, cell.getNumericCellValue());
                     } else if (cell.getCellType() == CellType.STRING) {
-                        Double value = parseDouble(cell.getStringCellValue());
+                        Double numericValue = parseDouble(cell.getStringCellValue());
 
-                        addWholeNumberToList(data, value);
+                        addWholeNumberToList(data, numericValue);
                     }
                 }
             }

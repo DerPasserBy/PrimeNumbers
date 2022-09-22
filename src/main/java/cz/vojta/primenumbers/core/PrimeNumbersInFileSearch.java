@@ -11,13 +11,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Class for finding and working with prime numbers in files
+ * Class for finding and working with prime numbers in files. This implementation is limited by the min and max size
+ * of an integer
  */
 public class PrimeNumbersInFileSearch {
 
-    private final FileParser fileParser;
+    private FileParser fileParser;
+
+    public PrimeNumbersInFileSearch() {
+    }
 
     public PrimeNumbersInFileSearch(File file) throws IOException, UnsupportedFileType, NoSuchFileExists {
+        if (file == null) {
+            throw new IllegalArgumentException("File cannot be null");
+        }
+
         if (file.exists() && !file.isDirectory()) {
             String fileExtension = getFileExtension(file.getName());
             this.fileParser = getFileParser(file, fileExtension);
@@ -50,11 +58,12 @@ public class PrimeNumbersInFileSearch {
         return FilenameUtils.getExtension(fileName);
     }
 
-    private static FileParser getFileParser(File file, String fileExtension) throws IOException, UnsupportedFileType {
+    private static FileParser getFileParser(File file, String fileExtensionString) throws IOException, UnsupportedFileType {
+        FileExtension fileExtension = FileExtension.resolveFileExtension(fileExtensionString);
         switch (fileExtension) {
-            case "xls":
-            case "xlsx":
-                return new ExcelFileParser(file);
+            case XLS:
+            case XLSX:
+                return new ExcelFileParser(file, fileExtension);
             default:
                 throw new UnsupportedFileType();
         }
